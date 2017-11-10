@@ -58,6 +58,12 @@ Server.prototype = {
                 }
             });
         });
+
+        this._server.post('/print', function(req, res) {
+            // First create temp text file in 'queue/file.txt'
+            // run lpr -o raw -H localhost -P device_name file.txt
+        
+        });
     }
 };
 
