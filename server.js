@@ -12,6 +12,8 @@
 var _ = require('underscore');
 var http = require('http');
 var bodyParser = require('body-parser');
+var fs = require('fs');
+var cmd = require('node-cmd');
 
 var Server = function() {
     this._server  = require('express')();
@@ -41,8 +43,6 @@ Server.prototype = {
 
     initRoutes: function() {
         var _this = this;
-
-
         this._server.get('/', function(req, res) {
             res.json({
                 'type': 'success',
@@ -51,7 +51,7 @@ Server.prototype = {
                         '/print': {
                             'params': [
                                 'device_name',
-                                'printer_data'
+                                'print_string'
                             ]
                         }
                     }
@@ -60,10 +60,29 @@ Server.prototype = {
         });
 
         this._server.post('/print', function(req, res) {
-            // First create temp text file in 'queue/file.txt'
-            // run lpr -o raw -H localhost -P device_name file.txt
-        
+            var path = '/queue/' + new Date.now() + '.txt',
+            buffer = new Buffer(req.body.print_string);
+
+            fs.open(path, 'w', function(err, fd) {
+                if (err) {
+                    throw 'Failed to open file: ' + err;
+                }
+
+                fs.write(fd, buffer, 0, buffer.length, null, function(err) {
+                    if (err) throw 'Failed to write file: ' + err;
+                    fs.close(fd, function() {
+                        this.rawPrint(
+                            req.body.device_name,
+                            path
+                        );
+                    });
+                });
+            });
         });
+    },
+
+    rawPrint: function(device, file) {
+        cmd.run('lpr -o raw -H localhost -P ' + device + ' ' + file);
     }
 };
 
