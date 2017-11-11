@@ -82,6 +82,7 @@ Server.prototype = {
     },
 
     rawPrint: function(device, file) {
+        // This will print to a local printer
         cmd.run('lpr -o raw -H localhost -P ' + device + ' ' + file);
     }
 };
