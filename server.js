@@ -60,7 +60,9 @@ Server.prototype = {
         });
 
         this._server.post('/print', function(req, res) {
-            var path = '/queue/' + new Date.now() + '.txt',
+            var date = new Date();
+            var _this = this;
+            var path =  date + '.txt',
             buffer = new Buffer(req.body.print_string);
 
             fs.open(path, 'w', function(err, fd) {
@@ -71,10 +73,10 @@ Server.prototype = {
                 fs.write(fd, buffer, 0, buffer.length, null, function(err) {
                     if (err) throw 'Failed to write file: ' + err;
                     fs.close(fd, function() {
-                        this.rawPrint(
-                            req.body.device_name,
-                            path
-                        );
+                        cmd.run('lpr -o raw -H localhost -P ' + req.body.device_name + ' ' + path);
+                        res.json({
+                            'type': 'success'
+                        });
                     });
                 });
             });
@@ -83,7 +85,7 @@ Server.prototype = {
 
     rawPrint: function(device, file) {
         // This will print to a local printer locally
-        cmd.run('lpr -o raw -H localhost -P ' + device + ' ' + file);
+        
     }
 };
 
